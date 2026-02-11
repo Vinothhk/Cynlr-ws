@@ -1,0 +1,192 @@
+<mujoco model="gripper">
+
+  <compiler angle="radian"
+            meshdir="/home/vinoth/cynlr_ws/src/meshes"
+            autolimits="true"/>
+
+  <!-- Stable solver settings -->
+  <option gravity="0 0 -9.81"
+          timestep="0.001"
+          solver="Newton"
+          iterations="100"
+          tolerance="1e-8"/>
+
+  <!-- ======================= ASSETS ======================= -->
+  <asset>
+      <texture name="grid" type="2d" builtin="checker"
+             rgb1="0.3 0.3 0.3" rgb2="0.5 0.5 0.5" width="512" height="512"/>
+    <material name="grid_mat" texture="grid" texrepeat="8 8" reflectance="0.15"/>
+    <!-- Visual meshes -->
+    <mesh name="grav_base"        file="Grav/visual/base.stl"         scale="0.001 0.001 0.001"/>
+    <mesh name="outer_bar"        file="Grav/visual/outer_bar.stl"    scale="0.001 0.001 0.001"/>
+    <mesh name="inner_bar"        file="Grav/visual/inner_bar.stl"    scale="0.001 0.001 0.001"/>
+    <mesh name="finger_mount"     file="Grav/visual/finger_mount.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="finger_tip_v"     file="Grav/visual/finger_tip.obj"   scale="0.001 0.001 0.001"/>
+
+    <!-- Collision meshes -->
+    <mesh name="grav_base_col"  file="Grav/collision/base.stl"       scale="0.001 0.001 0.001"/>
+    <mesh name="outer_bar_col"  file="Grav/collision/outer_bar.stl"  scale="0.001 0.001 0.001"/>
+    <mesh name="inner_bar_col"  file="Grav/collision/inner_bar.stl"  scale="0.001 0.001 0.001"/>
+    <mesh name="finger_tip_col" file="Grav/collision/finger_tip.stl" scale="0.001 0.001 0.001"/>
+
+    <material name="flexiv_black" rgba="0.22 0.22 0.22 1"/>
+
+  </asset>
+
+  <!-- ======================= DEFAULTS ======================= -->
+  <default>
+    <joint damping="3.0" frictionloss="0.2"/>
+    <geom contype="1" conaffinity="1" condim="4"
+          friction="1.0 0.005 0.0001"/>
+  </default>
+
+  <!-- ======================= WORLD ======================= -->
+  <worldbody>
+
+    <light name="key_light"  mode="fixed" pos="0 -3 5"  dir="0.0  0.5 -0.9"
+           diffuse="0.8 0.8 0.8" specular="0.3 0.3 0.3" castshadow="true"/>
+    <light name="fill_light" mode="fixed" pos="0  3 3"  dir="0.0 -0.5 -0.6"
+           diffuse="0.4 0.4 0.5" specular="0.0 0.0 0.0" castshadow="false"/>
+    <light name="back_light" mode="fixed" pos="3  0 2"  dir="-0.8  0.0 -0.4"
+           diffuse="0.3 0.3 0.3" specular="0.0 0.0 0.0" castshadow="false"/>
+
+    <geom name="ground" type="plane" pos="0 0 0" size="5 5 0.1"
+          material="grid_mat" contype="1" conaffinity="1"
+          friction="1.0 0.005 0.0001"/>
+
+    <!-- Fix gripper in air -->
+    <body name="flange" pos="0 0 0.4">
+      <freejoint/>
+
+      <body name="grav_base">
+
+        <inertial pos="0 0 0.057"
+                  mass="1.186"
+                  diaginertia="0.003 0.003 0.001"/>
+
+        <!-- Visual -->
+        <geom type="mesh" mesh="grav_base"
+              euler="0 0 1.5707963"
+              material="flexiv_black"
+              contype="0" conaffinity="0"/>
+
+        <!-- Collision -->
+        <geom type="mesh" mesh="grav_base_col"
+              euler="0 0 1.5707963"/>
+
+        <!-- Finger width joint -->
+        <body name="fw_link">
+          <inertial pos="0 0 0"
+                    mass="0.0001"
+                    diaginertia="1e-7 1e-7 1e-7"/>
+          <joint name="fw"
+                 type="hinge"
+                 axis="1 0 0"
+                 range="0 0.1"/>
+        </body>
+
+        <!-- LEFT SIDE -->
+        <body name="l_outer_bar" pos="0 -0.0325 0.0825">
+          <joint name="l_ok" type="hinge"
+                 axis="1 0 0"
+                 range="-0.155 0.7854"/>
+
+          <geom type="mesh" mesh="outer_bar"
+                euler="0 0 1.5707963"
+                material="flexiv_black"
+                contype="0" conaffinity="0"/>
+
+          <geom type="mesh" mesh="outer_bar_col"
+                euler="0 0 1.5707963"/>
+
+          <body name="l_fmount" pos="0 0 0.058">
+            <joint name="l_if"
+                   type="hinge"
+                   axis="1 0 0"
+                   range="-0.7854 0.155"/>
+
+            <geom type="mesh" mesh="finger_mount"
+                  euler="0 0 1.5707963"
+                  material="flexiv_black"
+                  contype="0" conaffinity="0"/>
+
+            <body name="l_ftip" pos="0 0.010 0.0235">
+              <geom type="mesh" mesh="finger_tip_v"
+                    euler="0 0 1.5707963"
+                    contype="0" conaffinity="0"/>
+
+              <geom type="mesh" mesh="finger_tip_col"
+                    euler="0 0 1.5707963"/>
+            </body>
+          </body>
+        </body>
+
+        <!-- RIGHT SIDE -->
+        <body name="r_outer_bar" pos="0 0.0325 0.0825"
+              euler="0 0 3.141592654">
+
+          <joint name="r_ok"
+                 type="hinge"
+                 axis="1 0 0"
+                 range="-0.155 0.7854"/>
+
+          <geom type="mesh" mesh="outer_bar"
+                euler="0 0 1.5707963"
+                material="flexiv_black"
+                contype="0" conaffinity="0"/>
+
+          <geom type="mesh" mesh="outer_bar_col"
+                euler="0 0 1.5707963"/>
+
+          <body name="r_fmount" pos="0 0 0.058">
+            <joint name="r_if"
+                   type="hinge"
+                   axis="1 0 0"
+                   range="-0.7854 0.155"/>
+
+            <geom type="mesh" mesh="finger_mount"
+                  euler="0 0 1.5707963"
+                  material="flexiv_black"
+                  contype="0" conaffinity="0"/>
+
+            <body name="r_ftip" pos="0 0.010 0.0235">
+              <geom type="mesh" mesh="finger_tip_v"
+                    euler="0 0 1.5707963"
+                    contype="0" conaffinity="0"/>
+
+              <geom type="mesh" mesh="finger_tip_col"
+                    euler="0 0 1.5707963"/>
+            </body>
+          </body>
+        </body>
+
+      </body>
+    </body>
+
+  </worldbody>
+
+  <!-- ======================= MIMIC CONSTRAINTS ======================= -->
+  <equality>
+    <joint joint1="l_ok" joint2="fw"
+           polycoef="-0.155 9.404 0 0 0"/>
+
+    <joint joint1="l_if" joint2="l_ok"
+           polycoef="0 -1 0 0 0"/>
+
+    <joint joint1="r_ok" joint2="l_ok"
+           polycoef="0 1 0 0 0"/>
+
+    <joint joint1="r_if" joint2="l_ok"
+           polycoef="0 -1 0 0 0"/>
+  </equality>
+
+  <!-- ======================= ACTUATOR ======================= -->
+  <actuator>
+    <position name="grip"
+              joint="fw"
+              kp="150"
+              forcerange="-80 80"
+              ctrlrange="0 0.5"/>
+  </actuator>
+
+</mujoco>

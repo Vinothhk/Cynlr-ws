@@ -1,0 +1,331 @@
+<mujoco model="Rizon4s">
+
+  <compiler angle="radian" meshdir="/home/vinoth/cynlr_ws/src/meshes" autolimits="true"/>
+
+  <option gravity="0 0 -9.81" timestep="0.002"/>
+
+  <!-- ============================================================ -->
+  <!-- VISUAL: sky, headlight, shadows                             -->
+  <!-- ============================================================ -->
+  <visual>
+    <headlight diffuse="0.6 0.6 0.6" ambient="0.3 0.3 0.3" specular="0.1 0.1 0.1"/>
+    <rgba haze="0.15 0.25 0.35 1"/>
+    <quality shadowsize="4096"/>
+    <map stiffness="700" shadowscale="0.5"/>
+  </visual>
+
+  <asset>
+    <!-- Ground texture + material -->
+    <texture name="grid" type="2d" builtin="checker"
+             rgb1="0.3 0.3 0.3" rgb2="0.5 0.5 0.5" width="512" height="512"/>
+    <material name="grid_mat" texture="grid" texrepeat="4 4" reflectance="0.15"/>
+
+    <!-- Sky texture -->
+    <texture name="sky" type="skybox" builtin="gradient"
+             rgb1="0.53 0.81 0.98" rgb2="0.1 0.1 0.15" width="512" height="512"/>
+
+    <!-- Rizon4s arm meshes -->
+    <mesh name="base_link"  file="Rizon4s/visual/link0.obj"/>
+    <mesh name="link1"      file="Rizon4s/visual/link1.obj"/>
+    <mesh name="link2"      file="Rizon4s/visual/link2.obj"/>
+    <mesh name="link3"      file="Rizon4s/visual/link3.obj"/>
+    <mesh name="link4"      file="Rizon4s/visual/link4.obj"/>
+    <mesh name="link5"      file="Rizon4s/visual/link5.obj"/>
+    <mesh name="link6"      file="Rizon4s/visual/link6.obj"/>
+    <mesh name="link7"      file="Rizon4s/visual/link7.obj"/>
+
+    <!-- Grav gripper meshes -->
+    <mesh name="grav_base"        file="Grav/visual/base.stl"         scale="0.001 0.001 0.001"/>
+    <mesh name="outer_bar"        file="Grav/visual/outer_bar.stl"    scale="0.001 0.001 0.001"/>
+    <mesh name="inner_bar"        file="Grav/visual/inner_bar.stl"    scale="0.001 0.001 0.001"/>
+    <mesh name="finger_mount"     file="Grav/visual/finger_mount.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="finger_tip_left"  file="Grav/visual/finger_tip.obj"   scale="0.001 0.001 0.001"/>
+    <mesh name="finger_tip_right" file="Grav/visual/finger_tip.obj"   scale="0.001 0.001 0.001"/>
+
+    <!-- Collision meshes (arm) -->
+    <mesh name="base_link_col" file="Rizon4s/collision/link0.stl"/>
+    <mesh name="link1_col"     file="Rizon4s/collision/link1.stl"/>
+    <mesh name="link2_col"     file="Rizon4s/collision/link2.stl"/>
+    <mesh name="link3_col"     file="Rizon4s/collision/link3.stl"/>
+    <mesh name="link4_col"     file="Rizon4s/collision/link4.stl"/>
+    <mesh name="link5_col"     file="Rizon4s/collision/link5.stl"/>
+    <mesh name="link6_col"     file="Rizon4s/collision/link6.stl"/>
+    <mesh name="link7_col"     file="Rizon4s/collision/link7.stl"/>
+
+    <!-- Collision meshes (gripper) -->
+    <mesh name="grav_base_col"  file="Grav/collision/base.stl"       scale="0.001 0.001 0.001"/>
+    <mesh name="outer_bar_col"  file="Grav/collision/outer_bar.stl"  scale="0.001 0.001 0.001"/>
+    <mesh name="inner_bar_col"  file="Grav/collision/inner_bar.stl"  scale="0.001 0.001 0.001"/>
+    <mesh name="finger_tip_col" file="Grav/collision/finger_tip.stl" scale="0.001 0.001 0.001"/>
+
+    <material name="flexiv_black" rgba="0.22 0.22 0.22 1"/>
+  </asset>
+
+  <default>
+    <joint damping="1.0" frictionloss="0.1"/>
+    <geom contype="1" conaffinity="1" condim="4" friction="1.0 0.005 0.0001"/>
+    <!-- Default position actuator gains (used by all position controllers) -->
+    <position kp="500" forcelimited="true"/>
+  </default>
+
+  <worldbody>
+
+    <!-- ============================================================ -->
+    <!-- LIGHTS                                                       -->
+    <!-- ============================================================ -->
+    <!-- Key light (sun-like, directional) -->
+    <light name="key_light" mode="fixed"
+           pos="2 -2 4" dir="-0.4 0.4 -0.8"
+           diffuse="0.8 0.8 0.8" specular="0.3 0.3 0.3"
+           castshadow="true"/>
+
+    <!-- Fill light (soft, opposite side) -->
+    <light name="fill_light" mode="fixed"
+           pos="-2 2 3" dir="0.4 -0.4 -0.6"
+           diffuse="0.4 0.4 0.5" specular="0.0 0.0 0.0"
+           castshadow="false"/>
+
+    <!-- Back/rim light -->
+    <light name="back_light" mode="fixed"
+           pos="0 3 2" dir="0.0 -0.6 -0.4"
+           diffuse="0.3 0.3 0.3" specular="0.0 0.0 0.0"
+           castshadow="false"/>
+
+    <!-- ============================================================ -->
+    <!-- GROUND PLANE                                                 -->
+    <!-- ============================================================ -->
+    <geom name="ground" type="plane"
+          pos="0 0 0" size="3 3 0.1"
+          material="grid_mat"
+          contype="1" conaffinity="1"
+          friction="1.0 0.005 0.0001"/>
+
+    <!-- ============================================================ -->
+    <!-- ROBOT                                                        -->
+    <!-- ============================================================ -->
+    <body name="Rizon4s-123456_base_link" pos="0 0 0">
+      <inertial pos="0.0 0.0 0.09" mass="3.8" diaginertia="0.02 0.02 0.01"/>
+      <geom type="mesh" mesh="base_link"     material="flexiv_black" contype="0" conaffinity="0"/>
+      <geom type="mesh" mesh="base_link_col"/>
+
+      <body name="Rizon4s-123456_link1" pos="0 0 0.155" euler="0 0 -3.141592654">
+        <inertial pos="0.0 0.0 0.15" mass="3.6" diaginertia="0.03 0.03 0.01"/>
+        <joint name="Rizon4s-123456_joint1" type="hinge" axis="0 0 1" range="-2.8798 2.8798"/>
+        <geom type="mesh" mesh="link1"     material="flexiv_black" contype="0" conaffinity="0"/>
+        <geom type="mesh" mesh="link1_col"/>
+
+        <body name="Rizon4s-123456_link2" pos="0 0.03 0.21">
+          <inertial pos="-0.0 0.04 0.1" mass="2.7"
+                    fullinertia="0.02 0.02 0.004 0.0 0.0 -0.0003"/>
+          <joint name="Rizon4s-123456_joint2" type="hinge" axis="0 1 0" range="-2.3562 2.3562"/>
+          <geom type="mesh" mesh="link2"     material="flexiv_black" contype="0" conaffinity="0"/>
+          <geom type="mesh" mesh="link2_col"/>
+
+          <body name="Rizon4s-123456_link3" pos="0 0.035 0.205">
+            <inertial pos="-0.01 -0.0 0.14" mass="2.4"
+                      fullinertia="0.01 0.01 0.004 0.0 -0.001 -0.0007"/>
+            <joint name="Rizon4s-123456_joint3" type="hinge" axis="0 0 1" range="-3.0543 3.0543"/>
+            <geom type="mesh" mesh="link3"     material="flexiv_black" contype="0" conaffinity="0"/>
+            <geom type="mesh" mesh="link3_col"/>
+
+            <body name="Rizon4s-123456_link4" pos="-0.02 -0.03 0.19" euler="0 0 -3.141592654">
+              <inertial pos="-0.01 0.03 0.1" mass="2.4"
+                        fullinertia="0.02 0.02 0.003 0.0 -0.002 -0.001"/>
+              <joint name="Rizon4s-123456_joint4" type="hinge" axis="0 1 0" range="-1.9548 2.7751"/>
+              <geom type="mesh" mesh="link4"     material="flexiv_black" contype="0" conaffinity="0"/>
+              <geom type="mesh" mesh="link4_col"/>
+
+              <body name="Rizon4s-123456_link5" pos="-0.02 0.025 0.195" euler="0 0 -3.141592654">
+                <inertial pos="0.0 0.0 0.14" mass="2.3"
+                          fullinertia="0.01 0.01 0.004 0.0 0.0 0.001"/>
+                <joint name="Rizon4s-123456_joint5" type="hinge" axis="0 0 1" range="-3.0543 3.0543"/>
+                <geom type="mesh" mesh="link5"     material="flexiv_black" contype="0" conaffinity="0"/>
+                <geom type="mesh" mesh="link5_col"/>
+
+                <body name="Rizon4s-123456_link6" pos="0 0.03 0.19">
+                  <inertial pos="0.02 0.06 0.07" mass="2.2"
+                            fullinertia="0.01 0.01 0.004 0.0 -0.001 0.002"/>
+                  <joint name="Rizon4s-123456_joint6" type="hinge" axis="0 1 0" range="-1.4835 4.6251"/>
+                  <geom type="mesh" mesh="link6"     material="flexiv_black" contype="0" conaffinity="0"/>
+                  <geom type="mesh" mesh="link6_col"/>
+
+                  <body name="Rizon4s-123456_link7" pos="-0.015 0.073 0.11" euler="0 -1.570796327 0">
+                    <inertial pos="0.0 0.0 0.05" mass="1.4" diaginertia="0.001 0.001 0.001"/>
+                    <joint name="Rizon4s-123456_joint7" type="hinge" axis="0 0 1" range="-3.0543 3.0543"/>
+                    <geom type="mesh" mesh="link7"     material="flexiv_black" contype="0" conaffinity="0"/>
+                    <geom type="mesh" mesh="link7_col"/>
+
+                    <body name="Rizon4s-123456_flange" pos="0 0 0.124" euler="0 0 -3.141592654">
+
+                      <body name="Rizon4s-123456_grav_base_link" pos="0 0 0">
+                        <inertial pos="0 0 0.057" mass="1.186" diaginertia="3E-3 3E-3 1E-3"/>
+                        <geom type="mesh" mesh="grav_base"     euler="0 0 1.5707963267948966"
+                              material="flexiv_black" contype="0" conaffinity="0"/>
+                        <geom type="mesh" mesh="grav_base_col" euler="0 0 1.5707963267948966"/>
+
+                        <site name="Rizon4s-123456_grav_tcp"           pos="0 0 0.15" size="0.005"/>
+                        <site name="Rizon4s-123456_closed_fingers_tcp" pos="0 0 0.20" size="0.005"/>
+
+                        <body name="Rizon4s-123456_unused_finger_width_link" pos="0 0 0">
+                          <inertial pos="0 0 0" mass="1E-4" diaginertia="1E-7 1E-7 1E-7"/>
+                          <joint name="Rizon4s-123456_finger_width_joint" type="hinge" axis="1 0 0"
+                                 range="0 0.100"/>
+                        </body>
+
+                        <!-- LEFT FINGER -->
+                        <body name="Rizon4s-123456_left_outer_bar" pos="0 -0.0325 0.0825">
+                          <inertial pos="0 0 0.029" mass="1E-4" diaginertia="1E-7 1E-7 1E-7"/>
+                          <joint name="Rizon4s-123456_left_outer_knuckle_joint" type="hinge" axis="1 0 0"
+                                 range="-0.155 0.7854"/>
+                          <geom type="mesh" mesh="outer_bar"     euler="0 0 1.5707963267948966"
+                                material="flexiv_black" contype="0" conaffinity="0"/>
+                          <geom type="mesh" mesh="outer_bar_col" euler="0 0 1.5707963267948966"/>
+
+                          <body name="Rizon4s-123456_left_finger_mount" pos="0 0 0.058">
+                            <inertial pos="0 0 0" mass="1E-4" diaginertia="1E-7 1E-7 1E-7"/>
+                            <joint name="Rizon4s-123456_left_inner_finger_joint" type="hinge" axis="1 0 0"
+                                   range="-0.7854 0.155"/>
+                            <geom type="mesh" mesh="finger_mount" euler="0 0 1.5707963267948966"
+                                  material="flexiv_black" contype="0" conaffinity="0"/>
+
+                            <body name="Rizon4s-123456_left_finger_tip" pos="0 0.010 0.0235">
+                              <inertial pos="0 0 0" mass="1E-5" diaginertia="1E-10 1E-10 1E-10"/>
+                              <geom type="mesh" mesh="finger_tip_left" euler="0 0 1.5707963267948966"
+                                    contype="0" conaffinity="0"/>
+                              <geom type="mesh" mesh="finger_tip_col"  euler="0 0 1.5707963267948966"/>
+                              <site name="Rizon4s-123456_left_finger_tcp" pos="0 0.0135 0.036" size="0.004"/>
+                            </body>
+                          </body>
+                        </body>
+
+                        <body name="Rizon4s-123456_left_inner_bar" pos="0 -0.0165 0.0995">
+                          <inertial pos="0 0 0.029" mass="1E-4" diaginertia="1E-7 1E-7 1E-7"/>
+                          <joint name="Rizon4s-123456_left_inner_knuckle_joint" type="hinge" axis="1 0 0"
+                                 range="-0.155 0.7854"/>
+                          <geom type="mesh" mesh="inner_bar"     euler="0 0 1.5707963267948966"
+                                material="flexiv_black" contype="0" conaffinity="0"/>
+                          <geom type="mesh" mesh="inner_bar_col" euler="0 0 1.5707963267948966"/>
+                        </body>
+
+                        <!-- RIGHT FINGER -->
+                        <body name="Rizon4s-123456_right_outer_bar" pos="0 0.0325 0.0825"
+                              euler="0 0 3.141592653589793">
+                          <inertial pos="0 0 0.029" mass="1E-4" diaginertia="1E-7 1E-7 1E-7"/>
+                          <joint name="Rizon4s-123456_right_outer_knuckle_joint" type="hinge" axis="1 0 0"
+                                 range="-0.155 0.7854"/>
+                          <geom type="mesh" mesh="outer_bar"     euler="0 0 1.5707963267948966"
+                                material="flexiv_black" contype="0" conaffinity="0"/>
+                          <geom type="mesh" mesh="outer_bar_col" euler="0 0 1.5707963267948966"/>
+
+                          <body name="Rizon4s-123456_right_finger_mount" pos="0 0 0.058">
+                            <inertial pos="0 0 0" mass="1E-4" diaginertia="1E-7 1E-7 1E-7"/>
+                            <joint name="Rizon4s-123456_right_inner_finger_joint" type="hinge" axis="1 0 0"
+                                   range="-0.7854 0.155"/>
+                            <geom type="mesh" mesh="finger_mount" euler="0 0 1.5707963267948966"
+                                  material="flexiv_black" contype="0" conaffinity="0"/>
+
+                            <body name="Rizon4s-123456_right_finger_tip" pos="0 0.010 0.0235">
+                              <inertial pos="0 0 0" mass="1E-5" diaginertia="1E-10 1E-10 1E-10"/>
+                              <geom type="mesh" mesh="finger_tip_right" euler="0 0 1.5707963267948966"
+                                    contype="0" conaffinity="0"/>
+                              <geom type="mesh" mesh="finger_tip_col"   euler="0 0 1.5707963267948966"/>
+                              <site name="Rizon4s-123456_right_finger_tcp" pos="0 0.0135 0.036" size="0.004"/>
+                            </body>
+                          </body>
+                        </body>
+
+                        <body name="Rizon4s-123456_right_inner_bar" pos="0 0.0165 0.0995"
+                              euler="0 0 3.141592653589793">
+                          <inertial pos="0 0 0.029" mass="1E-4" diaginertia="1E-7 1E-7 1E-7"/>
+                          <joint name="Rizon4s-123456_right_inner_knuckle_joint" type="hinge" axis="1 0 0"
+                                 range="-0.155 0.7854"/>
+                          <geom type="mesh" mesh="inner_bar"     euler="0 0 1.5707963267948966"
+                                material="flexiv_black" contype="0" conaffinity="0"/>
+                          <geom type="mesh" mesh="inner_bar_col" euler="0 0 1.5707963267948966"/>
+                        </body>
+
+                      </body> <!-- grav_base_link -->
+                    </body> <!-- flange -->
+                  </body> <!-- link7 -->
+                </body> <!-- link6 -->
+              </body> <!-- link5 -->
+            </body> <!-- link4 -->
+          </body> <!-- link3 -->
+        </body> <!-- link2 -->
+      </body> <!-- link1 -->
+    </body> <!-- base_link -->
+
+  </worldbody>
+
+  <!-- ============================================================ -->
+  <!-- EQUALITY CONSTRAINTS  (mimic joints)                        -->
+  <!-- ============================================================ -->
+  <equality>
+    <joint name="eq_left_outer_knuckle"
+           joint1="Rizon4s-123456_left_outer_knuckle_joint"
+           joint2="Rizon4s-123456_finger_width_joint"
+           polycoef="-0.155 9.404 0 0 0"/>
+    <joint name="eq_left_inner_knuckle"
+           joint1="Rizon4s-123456_left_inner_knuckle_joint"
+           joint2="Rizon4s-123456_left_outer_knuckle_joint"
+           polycoef="0 1 0 0 0"/>
+    <joint name="eq_left_inner_finger"
+           joint1="Rizon4s-123456_left_inner_finger_joint"
+           joint2="Rizon4s-123456_left_outer_knuckle_joint"
+           polycoef="0 -1 0 0 0"/>
+    <joint name="eq_right_outer_knuckle"
+           joint1="Rizon4s-123456_right_outer_knuckle_joint"
+           joint2="Rizon4s-123456_left_outer_knuckle_joint"
+           polycoef="0 1 0 0 0"/>
+    <joint name="eq_right_inner_knuckle"
+           joint1="Rizon4s-123456_right_inner_knuckle_joint"
+           joint2="Rizon4s-123456_left_outer_knuckle_joint"
+           polycoef="0 1 0 0 0"/>
+    <joint name="eq_right_inner_finger"
+           joint1="Rizon4s-123456_right_inner_finger_joint"
+           joint2="Rizon4s-123456_left_outer_knuckle_joint"
+           polycoef="0 -1 0 0 0"/>
+  </equality>
+
+  <!-- ============================================================ -->
+  <!-- ACTUATORS  — position controllers with gravity compensation  -->
+  <!--                                                              -->
+  <!--  kp  = proportional gain (stiffness)                        -->
+  <!--  kv  = derivative gain   (damping)   [MuJoCo >= 3.x]       -->
+  <!--  forcerange = peak torque (matches URDF effort limits)      -->
+  <!-- ============================================================ -->
+  <actuator>
+    <position name="ctrl_joint1" joint="Rizon4s-123456_joint1"
+              kp="500" forcerange="-123 123" ctrlrange="-2.8798 2.8798"/>
+    <position name="ctrl_joint2" joint="Rizon4s-123456_joint2"
+              kp="500" forcerange="-123 123" ctrlrange="-2.3562 2.3562"/>
+    <position name="ctrl_joint3" joint="Rizon4s-123456_joint3"
+              kp="300" forcerange="-64  64"  ctrlrange="-3.0543 3.0543"/>
+    <position name="ctrl_joint4" joint="Rizon4s-123456_joint4"
+              kp="300" forcerange="-64  64"  ctrlrange="-1.9548 2.7751"/>
+    <position name="ctrl_joint5" joint="Rizon4s-123456_joint5"
+              kp="150" forcerange="-39  39"  ctrlrange="-3.0543 3.0543"/>
+    <position name="ctrl_joint6" joint="Rizon4s-123456_joint6"
+              kp="150" forcerange="-39  39"  ctrlrange="-1.4835 4.6251"/>
+    <position name="ctrl_joint7" joint="Rizon4s-123456_joint7"
+              kp="150" forcerange="-39  39"  ctrlrange="-3.0543 3.0543"/>
+
+    <!-- Gripper: position controller on the virtual width joint -->
+    <position name="ctrl_gripper" joint="Rizon4s-123456_finger_width_joint"
+              kp="100" forcerange="-80 80" ctrlrange="0 0.1"/>
+  </actuator>
+
+  <!-- ============================================================ -->
+  <!-- KEY-FRAME  (home / zero pose for quick reset)               -->
+  <!-- ============================================================ -->
+  <keyframe>
+    <!-- qpos: joint1-7, finger_width,
+               left_outer_knuckle, left_inner_finger, left_inner_knuckle,
+               right_outer_knuckle, right_inner_finger, right_inner_knuckle  (14 total)
+         ctrl: ctrl_joint1-7, ctrl_gripper  (8 total) -->
+    <key name="home"
+         qpos="0 0 0 0 0 0 0  0  0 0 0 0 0 0"
+         ctrl="0 0 0 0 0 0 0  0"/>
+  </keyframe>
+
+</mujoco>
