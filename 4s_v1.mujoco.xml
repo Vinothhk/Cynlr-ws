@@ -223,7 +223,7 @@
     </body>
 
     <!-- Robot B (camera only, no gripper) -->
-    <body name="R234567_base_link" pos="0.0 0 0.2" euler="0 0 -1.57">
+    <body name="R234567_base_link" pos="0.0 0 0.2" euler="0 0 1.57">
       <inertial pos="0 0 0.09" mass="3.8" diaginertia="0.02 0.02 0.01"/>
       <geom type="mesh" mesh="base_link" rgba="0.184 0.063 0.322 0.8" contype="0" conaffinity="0"/>
       <geom type="mesh" mesh="base_link_col" rgba="0 0 0 0"/>
