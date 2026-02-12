@@ -1,12 +1,8 @@
-<mujoco model="Rizon4s">
+<mujoco model="Rizon4s_triple_mobile">
 
   <compiler angle="radian" meshdir="/home/vinoth/cynlr_ws/src/meshes" autolimits="true"/>
+  <option gravity="0 0 -9.81" timestep="0.001"/>
 
-  <option gravity="0 0 -9.81" timestep="0.002"/>
-
-  <!-- ============================================================ -->
-  <!-- VISUAL: sky, headlight, shadows                             -->
-  <!-- ============================================================ -->
   <visual>
     <headlight diffuse="0.6 0.6 0.6" ambient="0.3 0.3 0.3" specular="0.1 0.1 0.1"/>
     <rgba haze="0.15 0.25 0.35 1"/>
@@ -15,16 +11,12 @@
   </visual>
 
   <asset>
-    <!-- Ground texture + material -->
     <texture name="grid" type="2d" builtin="checker"
              rgb1="0.3 0.3 0.3" rgb2="0.5 0.5 0.5" width="512" height="512"/>
-    <material name="grid_mat" texture="grid" texrepeat="4 4" reflectance="0.15"/>
-
-    <!-- Sky texture -->
+    <material name="grid_mat" texture="grid" texrepeat="8 8" reflectance="0.15"/>
     <texture name="sky" type="skybox" builtin="gradient"
              rgb1="0.53 0.81 0.98" rgb2="0.1 0.1 0.15" width="512" height="512"/>
 
-    <!-- Rizon4s arm meshes -->
     <mesh name="base_link"  file="Rizon4s/visual/link0.obj"/>
     <mesh name="link1"      file="Rizon4s/visual/link1.obj"/>
     <mesh name="link2"      file="Rizon4s/visual/link2.obj"/>
@@ -34,15 +26,12 @@
     <mesh name="link6"      file="Rizon4s/visual/link6.obj"/>
     <mesh name="link7"      file="Rizon4s/visual/link7.obj"/>
 
-    <!-- Grav gripper meshes -->
     <mesh name="grav_base"        file="Grav/visual/base.stl"         scale="0.001 0.001 0.001"/>
     <mesh name="outer_bar"        file="Grav/visual/outer_bar.stl"    scale="0.001 0.001 0.001"/>
     <mesh name="inner_bar"        file="Grav/visual/inner_bar.stl"    scale="0.001 0.001 0.001"/>
     <mesh name="finger_mount"     file="Grav/visual/finger_mount.stl" scale="0.001 0.001 0.001"/>
-    <mesh name="finger_tip_left"  file="Grav/visual/finger_tip.obj"   scale="0.001 0.001 0.001"/>
-    <mesh name="finger_tip_right" file="Grav/visual/finger_tip.obj"   scale="0.001 0.001 0.001"/>
+    <mesh name="finger_tip_v"     file="Grav/visual/finger_tip.obj"   scale="0.001 0.001 0.001"/>
 
-    <!-- Collision meshes (arm) -->
     <mesh name="base_link_col" file="Rizon4s/collision/link0.stl"/>
     <mesh name="link1_col"     file="Rizon4s/collision/link1.stl"/>
     <mesh name="link2_col"     file="Rizon4s/collision/link2.stl"/>
@@ -52,280 +41,438 @@
     <mesh name="link6_col"     file="Rizon4s/collision/link6.stl"/>
     <mesh name="link7_col"     file="Rizon4s/collision/link7.stl"/>
 
-    <!-- Collision meshes (gripper) -->
     <mesh name="grav_base_col"  file="Grav/collision/base.stl"       scale="0.001 0.001 0.001"/>
     <mesh name="outer_bar_col"  file="Grav/collision/outer_bar.stl"  scale="0.001 0.001 0.001"/>
     <mesh name="inner_bar_col"  file="Grav/collision/inner_bar.stl"  scale="0.001 0.001 0.001"/>
     <mesh name="finger_tip_col" file="Grav/collision/finger_tip.stl" scale="0.001 0.001 0.001"/>
 
+    <mesh name="3_robot_mount" file="3_robot_mount.stl" scale="0.001 0.001 0.001"/>
+    <mesh name="mobile_base" file="mobile_base.stl"/>
+    <mesh name="clx" file="CLX_Reduced_v0.stl" scale="0.001 0.001 0.001"/>
+
     <material name="flexiv_black" rgba="0.22 0.22 0.22 1"/>
   </asset>
 
   <default>
-    <joint damping="1.0" frictionloss="0.1"/>
+    <joint damping="10.0" frictionloss="0.1"/>
     <geom contype="1" conaffinity="1" condim="4" friction="1.0 0.005 0.0001"/>
-    <!-- Default position actuator gains (used by all position controllers) -->
     <position kp="500" forcelimited="true"/>
   </default>
 
   <worldbody>
 
-    <!-- ============================================================ -->
-    <!-- LIGHTS                                                       -->
-    <!-- ============================================================ -->
-    <!-- Key light (sun-like, directional) -->
-    <light name="key_light" mode="fixed"
-           pos="2 -2 4" dir="-0.4 0.4 -0.8"
-           diffuse="0.8 0.8 0.8" specular="0.3 0.3 0.3"
-           castshadow="true"/>
+    <light name="key_light"  mode="fixed" pos="0 -3 5"  dir="0.0  0.5 -0.9"
+           diffuse="0.8 0.8 0.8" specular="0.3 0.3 0.3" castshadow="true"/>
+    <light name="fill_light" mode="fixed" pos="0  3 3"  dir="0.0 -0.5 -0.6"
+           diffuse="0.4 0.4 0.5" specular="0.0 0.0 0.0" castshadow="false"/>
+    <light name="back_light" mode="fixed" pos="3  0 2"  dir="-0.8  0.0 -0.4"
+           diffuse="0.3 0.3 0.3" specular="0.0 0.0 0.0" castshadow="false"/>
 
-    <!-- Fill light (soft, opposite side) -->
-    <light name="fill_light" mode="fixed"
-           pos="-2 2 3" dir="0.4 -0.4 -0.6"
-           diffuse="0.4 0.4 0.5" specular="0.0 0.0 0.0"
-           castshadow="false"/>
-
-    <!-- Back/rim light -->
-    <light name="back_light" mode="fixed"
-           pos="0 3 2" dir="0.0 -0.6 -0.4"
-           diffuse="0.3 0.3 0.3" specular="0.0 0.0 0.0"
-           castshadow="false"/>
-
-    <!-- ============================================================ -->
-    <!-- GROUND PLANE                                                 -->
-    <!-- ============================================================ -->
-    <geom name="ground" type="plane"
-          pos="0 0 0" size="3 3 0.1"
-          material="grid_mat"
-          contype="1" conaffinity="1"
+    <geom name="ground" type="plane" pos="0 0 0" size="5 5 0.1"
+          material="grid_mat" contype="1" conaffinity="1"
           friction="1.0 0.005 0.0001"/>
 
-    <!-- ============================================================ -->
-    <!-- ROBOT                                                        -->
-    <!-- ============================================================ -->
-    <body name="Rizon4s-123456_base_link" pos="0 0 0">
-      <inertial pos="0.0 0.0 0.09" mass="3.8" diaginertia="0.02 0.02 0.01"/>
-      <geom type="mesh" mesh="base_link"     material="flexiv_black" contype="0" conaffinity="0"/>
-      <geom type="mesh" mesh="base_link_col"/>
+    <!-- ================================================================ -->
+    <!-- MOBILE BASE with FREEJOINT (6-DOF floating: x, y, z, quat)      -->
+    <!-- freejoint gives 7 qpos values: [x, y, z, qw, qx, qy, qz]        -->
+    <!-- ================================================================ -->
+    <body name="mobile_base" pos="0 0 0.25" euler="-1.57 0 0">
+      <freejoint/>
+      <inertial pos="0 0 0.02" mass="400.0" diaginertia="1.0 1.0 1.0"/>
+      <geom type="mesh" mesh="mobile_base" material="flexiv_black" contype="1" conaffinity="1"/>
 
-      <body name="Rizon4s-123456_link1" pos="0 0 0.155" euler="0 0 -3.141592654">
-        <inertial pos="0.0 0.0 0.15" mass="3.6" diaginertia="0.03 0.03 0.01"/>
-        <joint name="Rizon4s-123456_joint1" type="hinge" axis="0 0 1" range="-2.8798 2.8798"/>
-        <geom type="mesh" mesh="link1"     material="flexiv_black" contype="0" conaffinity="0"/>
-        <geom type="mesh" mesh="link1_col"/>
+    <!-- WHEELS with proper friction -->
+    <body name="left_wheel" pos="0.0 0.18 0.3" euler="0 0 1.57">
+      <inertial pos="0 0 0" mass="0.5" diaginertia="0.005 0.0045 0.0045"/>
+      <joint name="left_wheel_joint" type="hinge" axis="0 0 1" damping="0.1"/>
+      <geom type="cylinder" size="0.075 0.02" rgba="0 0 0 1" mass="0.5" friction="2.0 0.005 0.0001"/>
+    </body>
 
-        <body name="Rizon4s-123456_link2" pos="0 0.03 0.21">
-          <inertial pos="-0.0 0.04 0.1" mass="2.7"
-                    fullinertia="0.02 0.02 0.004 0.0 0.0 -0.0003"/>
-          <joint name="Rizon4s-123456_joint2" type="hinge" axis="0 1 0" range="-2.3562 2.3562"/>
-          <geom type="mesh" mesh="link2"     material="flexiv_black" contype="0" conaffinity="0"/>
-          <geom type="mesh" mesh="link2_col"/>
+    <body name="right_wheel" pos="0.0 0.18 -0.3" euler="0 0 1.57">
+      <inertial pos="0 0 0" mass="0.5" diaginertia="0.005 0.0045 0.0045"/>
+      <joint name="right_wheel_joint" type="hinge" axis="0 0 1" damping="0.1"/>
+      <geom type="cylinder" size="0.075 0.02" rgba="0 0 0 1" mass="0.5" friction="2.0 0.005 0.0001"/>
+    </body>
+    
+    <!-- CASTOR WHEELS -->
+    <body name="front_castor" pos="-0.3 0.18 0" euler="0 0 1.57">
+      <inertial pos="0 0 0" mass="0.2" diaginertia="0.002 0.0015 0.0015"/>
+      <joint name="front_castor_joint" type="ball" damping="0.1"/>
+      <geom type="sphere" size="0.075" rgba="0 0 0 1" mass="0.2" friction="2.0 0.005 0.0001"/>
+    </body>
+    <body name="back_castor" pos="0.3 0.18 0" euler="0 0 1.57">
+      <inertial pos="0 0 0" mass="0.2" diaginertia="0.002 0.0015 0.0015"/>
+      <joint name="back_castor_joint" type="ball" damping="0.1"/>
+      <geom type="sphere" size="0.075" rgba="0 0 0 1" mass="0.2" friction="2.0 0.005 0.0001"/>
+    </body>
 
-          <body name="Rizon4s-123456_link3" pos="0 0.035 0.205">
-            <inertial pos="-0.01 -0.0 0.14" mass="2.4"
-                      fullinertia="0.01 0.01 0.004 0.0 -0.001 -0.0007"/>
-            <joint name="Rizon4s-123456_joint3" type="hinge" axis="0 0 1" range="-3.0543 3.0543"/>
-            <geom type="mesh" mesh="link3"     material="flexiv_black" contype="0" conaffinity="0"/>
-            <geom type="mesh" mesh="link3_col"/>
+    <body name="3_robot_mount" pos="-0.35 -0.725 0" euler="1.57 0 1.57">
+      <geom type="mesh" mesh="3_robot_mount" contype="1" conaffinity="1" condim="4"
+            material="flexiv_black" friction="1 0.005 0.0001"/>
 
-            <body name="Rizon4s-123456_link4" pos="-0.02 -0.03 0.19" euler="0 0 -3.141592654">
-              <inertial pos="-0.01 0.03 0.1" mass="2.4"
-                        fullinertia="0.02 0.02 0.003 0.0 -0.002 -0.001"/>
-              <joint name="Rizon4s-123456_joint4" type="hinge" axis="0 1 0" range="-1.9548 2.7751"/>
-              <geom type="mesh" mesh="link4"     material="flexiv_black" contype="0" conaffinity="0"/>
-              <geom type="mesh" mesh="link4_col"/>
-
-              <body name="Rizon4s-123456_link5" pos="-0.02 0.025 0.195" euler="0 0 -3.141592654">
-                <inertial pos="0.0 0.0 0.14" mass="2.3"
-                          fullinertia="0.01 0.01 0.004 0.0 0.0 0.001"/>
-                <joint name="Rizon4s-123456_joint5" type="hinge" axis="0 0 1" range="-3.0543 3.0543"/>
-                <geom type="mesh" mesh="link5"     material="flexiv_black" contype="0" conaffinity="0"/>
-                <geom type="mesh" mesh="link5_col"/>
-
-                <body name="Rizon4s-123456_link6" pos="0 0.03 0.19">
-                  <inertial pos="0.02 0.06 0.07" mass="2.2"
-                            fullinertia="0.01 0.01 0.004 0.0 -0.001 0.002"/>
-                  <joint name="Rizon4s-123456_joint6" type="hinge" axis="0 1 0" range="-1.4835 4.6251"/>
-                  <geom type="mesh" mesh="link6"     material="flexiv_black" contype="0" conaffinity="0"/>
-                  <geom type="mesh" mesh="link6_col"/>
-
-                  <body name="Rizon4s-123456_link7" pos="-0.015 0.073 0.11" euler="0 -1.570796327 0">
-                    <inertial pos="0.0 0.0 0.05" mass="1.4" diaginertia="0.001 0.001 0.001"/>
-                    <joint name="Rizon4s-123456_joint7" type="hinge" axis="0 0 1" range="-3.0543 3.0543"/>
-                    <geom type="mesh" mesh="link7"     material="flexiv_black" contype="0" conaffinity="0"/>
-                    <geom type="mesh" mesh="link7_col"/>
-
-                    <body name="Rizon4s-123456_flange" pos="0 0 0.124" euler="0 0 -3.141592654">
-
-                      <body name="Rizon4s-123456_grav_base_link" pos="0 0 0">
+    <!-- Robot A with gripper -->
+    <body name="R123456_base_link" pos="-0.27 0 0" euler="0 -0.6947 0">
+      <inertial pos="0 0 0.09" mass="3.8" diaginertia="0.02 0.02 0.01"/>
+      <geom type="mesh" mesh="base_link" rgba="0.184 0.063 0.322 0.8" contype="0" conaffinity="0"/>
+      <geom type="mesh" mesh="base_link_col" rgba="0 0 0 0"/>
+      <body name="R123456_link1" pos="0 0 0.155" euler="0 0 -3.141592654">
+        <inertial pos="0 0 0.15" mass="3.6" diaginertia="0.03 0.03 0.01"/>
+        <joint name="R123456_j1" type="hinge" axis="0 0 1" range="-2.8798 2.8798"/>
+        <geom type="mesh" mesh="link1" rgba="0.184 0.063 0.322 0.8" contype="0" conaffinity="0"/>
+        <geom type="mesh" mesh="link1_col" rgba="0 0 0 0"/>
+        <body name="R123456_link2" pos="0 0.03 0.21">
+          <inertial pos="0 0.04 0.1" mass="2.7" fullinertia="0.02 0.02 0.004 0.0 0.0 -0.0003"/>
+          <joint name="R123456_j2" type="hinge" axis="0 1 0" range="-2.3562 2.3562"/>
+          <geom type="mesh" mesh="link2" rgba="0.184 0.063 0.322 0.8" contype="0" conaffinity="0"/>
+          <geom type="mesh" mesh="link2_col" rgba="0 0 0 0"/>
+          <body name="R123456_link3" pos="0 0.035 0.205">
+            <inertial pos="-0.01 0 0.14" mass="2.4" fullinertia="0.01 0.01 0.004 0.0 -0.001 -0.0007"/>
+            <joint name="R123456_j3" type="hinge" axis="0 0 1" range="-3.0543 3.0543"/>
+            <geom type="mesh" mesh="link3" rgba="0.184 0.063 0.322 0.8" contype="0" conaffinity="0"/>
+            <geom type="mesh" mesh="link3_col" rgba="0 0 0 0"/>
+            <body name="R123456_link4" pos="-0.02 -0.03 0.19" euler="0 0 -3.141592654">
+              <inertial pos="-0.01 0.03 0.1" mass="2.4" fullinertia="0.02 0.02 0.003 0.0 -0.002 -0.001"/>
+              <joint name="R123456_j4" type="hinge" axis="0 1 0" range="-1.9548 2.7751"/>
+              <geom type="mesh" mesh="link4" rgba="0.184 0.063 0.322 0.8" contype="0" conaffinity="0"/>
+              <geom type="mesh" mesh="link4_col" rgba="0 0 0 0"/>
+              <body name="R123456_link5" pos="-0.02 0.025 0.195" euler="0 0 -3.141592654">
+                <inertial pos="0 0 0.14" mass="2.3" fullinertia="0.01 0.01 0.004 0.0 0.0 0.001"/>
+                <joint name="R123456_j5" type="hinge" axis="0 0 1" range="-3.0543 3.0543"/>
+                <geom type="mesh" mesh="link5" rgba="0.184 0.063 0.322 0.8" contype="0" conaffinity="0"/>
+                <geom type="mesh" mesh="link5_col" rgba="0 0 0 0"/>
+                <body name="R123456_link6" pos="0 0.03 0.19">
+                  <inertial pos="0.02 0.06 0.07" mass="2.2" fullinertia="0.01 0.01 0.004 0.0 -0.001 0.002"/>
+                  <joint name="R123456_j6" type="hinge" axis="0 1 0" range="-1.4835 4.6251"/>
+                  <geom type="mesh" mesh="link6" rgba="0.184 0.063 0.322 0.8" contype="0" conaffinity="0"/>
+                  <geom type="mesh" mesh="link6_col" rgba="0 0 0 0"/>
+                  <body name="R123456_link7" pos="-0.015 0.073 0.11" euler="0 -1.570796327 0">
+                    <inertial pos="0 0 0.05" mass="1.4" diaginertia="0.001 0.001 0.001"/>
+                    <joint name="R123456_j7" type="hinge" axis="0 0 1" range="-3.0543 3.0543"/>
+                    <geom type="mesh" mesh="link7" rgba="0.184 0.063 0.322 0.8" contype="0" conaffinity="0"/>
+                    <geom type="mesh" mesh="link7_col" rgba="0 0 0 0"/>
+                    <body name="R123456_flange" pos="0 0 0.124" euler="0 0 -3.141592654">
+                      <body name="R123456_grav_base" pos="0 0 0">
                         <inertial pos="0 0 0.057" mass="1.186" diaginertia="3E-3 3E-3 1E-3"/>
-                        <geom type="mesh" mesh="grav_base"     euler="0 0 1.5707963267948966"
+                        <geom type="mesh" mesh="grav_base" euler="0 0 1.5707963"
                               material="flexiv_black" contype="0" conaffinity="0"/>
-                        <geom type="mesh" mesh="grav_base_col" euler="0 0 1.5707963267948966"/>
-
-                        <site name="Rizon4s-123456_grav_tcp"           pos="0 0 0.15" size="0.005"/>
-                        <site name="Rizon4s-123456_closed_fingers_tcp" pos="0 0 0.20" size="0.005"/>
-
-                        <body name="Rizon4s-123456_unused_finger_width_link" pos="0 0 0">
+                        <geom type="mesh" mesh="grav_base_col" euler="0 0 1.5707963" rgba="0 0 0 0"/>
+                        <site name="R123456_tcp" pos="0 0 0.15" size="0.005"/>
+                        <body name="R123456_fw_link" pos="0 0 0">
                           <inertial pos="0 0 0" mass="1E-4" diaginertia="1E-7 1E-7 1E-7"/>
-                          <joint name="Rizon4s-123456_finger_width_joint" type="hinge" axis="1 0 0"
-                                 range="0 0.100"/>
+                          <joint name="R123456_fw" type="hinge" axis="1 0 0" range="0 0.1"/>
                         </body>
-
-                        <!-- LEFT FINGER -->
-                        <body name="Rizon4s-123456_left_outer_bar" pos="0 -0.0325 0.0825">
+                        <body name="R123456_l_outer_bar" pos="0 -0.0325 0.0825">
                           <inertial pos="0 0 0.029" mass="1E-4" diaginertia="1E-7 1E-7 1E-7"/>
-                          <joint name="Rizon4s-123456_left_outer_knuckle_joint" type="hinge" axis="1 0 0"
-                                 range="-0.155 0.7854"/>
-                          <geom type="mesh" mesh="outer_bar"     euler="0 0 1.5707963267948966"
+                          <joint name="R123456_l_ok" type="hinge" axis="1 0 0" range="-0.155 0.7854"/>
+                          <geom type="mesh" mesh="outer_bar" euler="0 0 1.5707963"
                                 material="flexiv_black" contype="0" conaffinity="0"/>
-                          <geom type="mesh" mesh="outer_bar_col" euler="0 0 1.5707963267948966"/>
-
-                          <body name="Rizon4s-123456_left_finger_mount" pos="0 0 0.058">
+                          <geom type="mesh" mesh="outer_bar_col" euler="0 0 1.5707963" rgba="0 0 0 0"/>
+                          <body name="R123456_l_fmount" pos="0 0 0.058">
                             <inertial pos="0 0 0" mass="1E-4" diaginertia="1E-7 1E-7 1E-7"/>
-                            <joint name="Rizon4s-123456_left_inner_finger_joint" type="hinge" axis="1 0 0"
-                                   range="-0.7854 0.155"/>
-                            <geom type="mesh" mesh="finger_mount" euler="0 0 1.5707963267948966"
+                            <joint name="R123456_l_if" type="hinge" axis="1 0 0" range="-0.7854 0.155"/>
+                            <geom type="mesh" mesh="finger_mount" euler="0 0 1.5707963"
                                   material="flexiv_black" contype="0" conaffinity="0"/>
-
-                            <body name="Rizon4s-123456_left_finger_tip" pos="0 0.010 0.0235">
+                            <body name="R123456_l_ftip" pos="0 0.010 0.0235">
                               <inertial pos="0 0 0" mass="1E-5" diaginertia="1E-10 1E-10 1E-10"/>
-                              <geom type="mesh" mesh="finger_tip_left" euler="0 0 1.5707963267948966"
-                                    contype="0" conaffinity="0"/>
-                              <geom type="mesh" mesh="finger_tip_col"  euler="0 0 1.5707963267948966"/>
-                              <site name="Rizon4s-123456_left_finger_tcp" pos="0 0.0135 0.036" size="0.004"/>
+                              <geom type="mesh" mesh="finger_tip_v" euler="0 0 1.5707963" contype="0" conaffinity="0"/>
+                              <geom type="mesh" mesh="finger_tip_col" euler="0 0 1.5707963" rgba="0 0 0 0"/>
                             </body>
                           </body>
                         </body>
-
-                        <body name="Rizon4s-123456_left_inner_bar" pos="0 -0.0165 0.0995">
+                        <body name="R123456_l_inner_bar" pos="0 -0.0165 0.0995">
                           <inertial pos="0 0 0.029" mass="1E-4" diaginertia="1E-7 1E-7 1E-7"/>
-                          <joint name="Rizon4s-123456_left_inner_knuckle_joint" type="hinge" axis="1 0 0"
-                                 range="-0.155 0.7854"/>
-                          <geom type="mesh" mesh="inner_bar"     euler="0 0 1.5707963267948966"
+                          <joint name="R123456_l_ik" type="hinge" axis="1 0 0" range="-0.155 0.7854"/>
+                          <geom type="mesh" mesh="inner_bar" euler="0 0 1.5707963"
                                 material="flexiv_black" contype="0" conaffinity="0"/>
-                          <geom type="mesh" mesh="inner_bar_col" euler="0 0 1.5707963267948966"/>
+                          <geom type="mesh" mesh="inner_bar_col" euler="0 0 1.5707963" rgba="0 0 0 0"/>
                         </body>
-
-                        <!-- RIGHT FINGER -->
-                        <body name="Rizon4s-123456_right_outer_bar" pos="0 0.0325 0.0825"
-                              euler="0 0 3.141592653589793">
+                        <body name="R123456_r_outer_bar" pos="0 0.0325 0.0825" euler="0 0 3.141592654">
                           <inertial pos="0 0 0.029" mass="1E-4" diaginertia="1E-7 1E-7 1E-7"/>
-                          <joint name="Rizon4s-123456_right_outer_knuckle_joint" type="hinge" axis="1 0 0"
-                                 range="-0.155 0.7854"/>
-                          <geom type="mesh" mesh="outer_bar"     euler="0 0 1.5707963267948966"
+                          <joint name="R123456_r_ok" type="hinge" axis="1 0 0" range="-0.155 0.7854"/>
+                          <geom type="mesh" mesh="outer_bar" euler="0 0 1.5707963"
                                 material="flexiv_black" contype="0" conaffinity="0"/>
-                          <geom type="mesh" mesh="outer_bar_col" euler="0 0 1.5707963267948966"/>
-
-                          <body name="Rizon4s-123456_right_finger_mount" pos="0 0 0.058">
+                          <geom type="mesh" mesh="outer_bar_col" euler="0 0 1.5707963" rgba="0 0 0 0"/>
+                          <body name="R123456_r_fmount" pos="0 0 0.058">
                             <inertial pos="0 0 0" mass="1E-4" diaginertia="1E-7 1E-7 1E-7"/>
-                            <joint name="Rizon4s-123456_right_inner_finger_joint" type="hinge" axis="1 0 0"
-                                   range="-0.7854 0.155"/>
-                            <geom type="mesh" mesh="finger_mount" euler="0 0 1.5707963267948966"
+                            <joint name="R123456_r_if" type="hinge" axis="1 0 0" range="-0.7854 0.155"/>
+                            <geom type="mesh" mesh="finger_mount" euler="0 0 1.5707963"
                                   material="flexiv_black" contype="0" conaffinity="0"/>
-
-                            <body name="Rizon4s-123456_right_finger_tip" pos="0 0.010 0.0235">
+                            <body name="R123456_r_ftip" pos="0 0.010 0.0235">
                               <inertial pos="0 0 0" mass="1E-5" diaginertia="1E-10 1E-10 1E-10"/>
-                              <geom type="mesh" mesh="finger_tip_right" euler="0 0 1.5707963267948966"
-                                    contype="0" conaffinity="0"/>
-                              <geom type="mesh" mesh="finger_tip_col"   euler="0 0 1.5707963267948966"/>
-                              <site name="Rizon4s-123456_right_finger_tcp" pos="0 0.0135 0.036" size="0.004"/>
+                              <geom type="mesh" mesh="finger_tip_v" euler="0 0 1.5707963" contype="0" conaffinity="0"/>
+                              <geom type="mesh" mesh="finger_tip_col" euler="0 0 1.5707963" rgba="0 0 0 0"/>
                             </body>
                           </body>
                         </body>
-
-                        <body name="Rizon4s-123456_right_inner_bar" pos="0 0.0165 0.0995"
-                              euler="0 0 3.141592653589793">
+                        <body name="R123456_r_inner_bar" pos="0 0.0165 0.0995" euler="0 0 3.141592654">
                           <inertial pos="0 0 0.029" mass="1E-4" diaginertia="1E-7 1E-7 1E-7"/>
-                          <joint name="Rizon4s-123456_right_inner_knuckle_joint" type="hinge" axis="1 0 0"
-                                 range="-0.155 0.7854"/>
-                          <geom type="mesh" mesh="inner_bar"     euler="0 0 1.5707963267948966"
+                          <joint name="R123456_r_ik" type="hinge" axis="1 0 0" range="-0.155 0.7854"/>
+                          <geom type="mesh" mesh="inner_bar" euler="0 0 1.5707963"
                                 material="flexiv_black" contype="0" conaffinity="0"/>
-                          <geom type="mesh" mesh="inner_bar_col" euler="0 0 1.5707963267948966"/>
+                          <geom type="mesh" mesh="inner_bar_col" euler="0 0 1.5707963" rgba="0 0 0 0"/>
                         </body>
+                      </body>
+                    </body>
+                  </body>
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
 
-                      </body> <!-- grav_base_link -->
-                    </body> <!-- flange -->
-                  </body> <!-- link7 -->
-                </body> <!-- link6 -->
-              </body> <!-- link5 -->
-            </body> <!-- link4 -->
-          </body> <!-- link3 -->
-        </body> <!-- link2 -->
-      </body> <!-- link1 -->
-    </body> <!-- base_link -->
+    <!-- Robot B (camera only, no gripper) -->
+    <body name="R234567_base_link" pos="0.0 0 0.2" euler="0 0 -1.57">
+      <inertial pos="0 0 0.09" mass="3.8" diaginertia="0.02 0.02 0.01"/>
+      <geom type="mesh" mesh="base_link" rgba="0.184 0.063 0.322 0.8" contype="0" conaffinity="0"/>
+      <geom type="mesh" mesh="base_link_col" rgba="0 0 0 0"/>
+      <body name="R234567_link1" pos="0 0 0.155" euler="0 0 -3.141592654">
+        <inertial pos="0 0 0.15" mass="3.6" diaginertia="0.03 0.03 0.01"/>
+        <joint name="R234567_j1" type="hinge" axis="0 0 1" range="-2.8798 2.8798"/>
+        <geom type="mesh" mesh="link1" rgba="0.184 0.063 0.322 0.8" contype="0" conaffinity="0"/>
+        <geom type="mesh" mesh="link1_col" rgba="0 0 0 0"/>
+        <body name="R234567_link2" pos="0 0.03 0.21">
+          <inertial pos="0 0.04 0.1" mass="2.7" fullinertia="0.02 0.02 0.004 0.0 0.0 -0.0003"/>
+          <joint name="R234567_j2" type="hinge" axis="0 1 0" range="-2.3562 2.3562"/>
+          <geom type="mesh" mesh="link2" rgba="0.184 0.063 0.322 0.8" contype="0" conaffinity="0"/>
+          <geom type="mesh" mesh="link2_col" rgba="0 0 0 0"/>
+          <body name="R234567_link3" pos="0 0.035 0.205">
+            <inertial pos="-0.01 0 0.14" mass="2.4" fullinertia="0.01 0.01 0.004 0.0 -0.001 -0.0007"/>
+            <joint name="R234567_j3" type="hinge" axis="0 0 1" range="-3.0543 3.0543"/>
+            <geom type="mesh" mesh="link3" rgba="0.184 0.063 0.322 0.8" contype="0" conaffinity="0"/>
+            <geom type="mesh" mesh="link3_col" rgba="0 0 0 0"/>
+            <body name="R234567_link4" pos="-0.02 -0.03 0.19" euler="0 0 -3.141592654">
+              <inertial pos="-0.01 0.03 0.1" mass="2.4" fullinertia="0.02 0.02 0.003 0.0 -0.002 -0.001"/>
+              <joint name="R234567_j4" type="hinge" axis="0 1 0" range="-1.9548 2.7751"/>
+              <geom type="mesh" mesh="link4" rgba="0.184 0.063 0.322 0.8" contype="0" conaffinity="0"/>
+              <geom type="mesh" mesh="link4_col" rgba="0 0 0 0"/>
+              <body name="R234567_link5" pos="-0.02 0.025 0.195" euler="0 0 -3.141592654">
+                <inertial pos="0 0 0.14" mass="2.3" fullinertia="0.01 0.01 0.004 0.0 0.0 0.001"/>
+                <joint name="R234567_j5" type="hinge" axis="0 0 1" range="-3.0543 3.0543"/>
+                <geom type="mesh" mesh="link5" rgba="0.184 0.063 0.322 0.8" contype="0" conaffinity="0"/>
+                <geom type="mesh" mesh="link5_col" rgba="0 0 0 0"/>
+                <body name="R234567_link6" pos="0 0.03 0.19">
+                  <inertial pos="0.02 0.06 0.07" mass="2.2" fullinertia="0.01 0.01 0.004 0.0 -0.001 0.002"/>
+                  <joint name="R234567_j6" type="hinge" axis="0 1 0" range="-1.4835 4.6251"/>
+                  <geom type="mesh" mesh="link6" rgba="0.184 0.063 0.322 0.8" contype="0" conaffinity="0"/>
+                  <geom type="mesh" mesh="link6_col" rgba="0 0 0 0"/>
+                  <body name="R234567_link7" pos="-0.015 0.073 0.11" euler="0 -1.570796327 0">
+                    <inertial pos="0 0 0.05" mass="1.4" diaginertia="0.001 0.001 0.001"/>
+                    <joint name="R234567_j7" type="hinge" axis="0 0 1" range="-3.0543 3.0543"/>
+                    <geom type="mesh" mesh="link7" rgba="0.184 0.063 0.322 0.8" contype="0" conaffinity="0"/>
+                    <geom type="mesh" mesh="link7_col" rgba="0 0 0 0"/>
+                    <body name="clx" pos="0 0 0.15" euler="1.57 1.57 3.14">
+                      <geom type="mesh" mesh="clx" contype="1" conaffinity="1" condim="4"
+                            material="flexiv_black" friction="1 0.005 0.0001"/>
+                    </body>
+                  </body>
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
 
+    <!-- Robot C with gripper -->
+    <body name="R345678_base_link" pos="0.27 0 0" euler="0 0.6947 0">
+      <inertial pos="0 0 0.09" mass="3.8" diaginertia="0.02 0.02 0.01"/>
+      <geom type="mesh" mesh="base_link" rgba="0.184 0.063 0.322 0.8" contype="0" conaffinity="0"/>
+      <geom type="mesh" mesh="base_link_col" rgba="0 0 0 0"/>
+      <body name="R345678_link1" pos="0 0 0.155" euler="0 0 -3.141592654">
+        <inertial pos="0 0 0.15" mass="3.6" diaginertia="0.03 0.03 0.01"/>
+        <joint name="R345678_j1" type="hinge" axis="0 0 1" range="-2.8798 2.8798"/>
+        <geom type="mesh" mesh="link1" rgba="0.184 0.063 0.322 0.8" contype="0" conaffinity="0"/>
+        <geom type="mesh" mesh="link1_col" rgba="0 0 0 0"/>
+        <body name="R345678_link2" pos="0 0.03 0.21">
+          <inertial pos="0 0.04 0.1" mass="2.7" fullinertia="0.02 0.02 0.004 0.0 0.0 -0.0003"/>
+          <joint name="R345678_j2" type="hinge" axis="0 1 0" range="-2.3562 2.3562"/>
+          <geom type="mesh" mesh="link2" rgba="0.184 0.063 0.322 0.8" contype="0" conaffinity="0"/>
+          <geom type="mesh" mesh="link2_col" rgba="0 0 0 0"/>
+          <body name="R345678_link3" pos="0 0.035 0.205">
+            <inertial pos="-0.01 0 0.14" mass="2.4" fullinertia="0.01 0.01 0.004 0.0 -0.001 -0.0007"/>
+            <joint name="R345678_j3" type="hinge" axis="0 0 1" range="-3.0543 3.0543"/>
+            <geom type="mesh" mesh="link3" rgba="0.184 0.063 0.322 0.8" contype="0" conaffinity="0"/>
+            <geom type="mesh" mesh="link3_col" rgba="0 0 0 0"/>
+            <body name="R345678_link4" pos="-0.02 -0.03 0.19" euler="0 0 -3.141592654">
+              <inertial pos="-0.01 0.03 0.1" mass="2.4" fullinertia="0.02 0.02 0.003 0.0 -0.002 -0.001"/>
+              <joint name="R345678_j4" type="hinge" axis="0 1 0" range="-1.9548 2.7751"/>
+              <geom type="mesh" mesh="link4" rgba="0.184 0.063 0.322 0.8" contype="0" conaffinity="0"/>
+              <geom type="mesh" mesh="link4_col" rgba="0 0 0 0"/>
+              <body name="R345678_link5" pos="-0.02 0.025 0.195" euler="0 0 -3.141592654">
+                <inertial pos="0 0 0.14" mass="2.3" fullinertia="0.01 0.01 0.004 0.0 0.0 0.001"/>
+                <joint name="R345678_j5" type="hinge" axis="0 0 1" range="-3.0543 3.0543"/>
+                <geom type="mesh" mesh="link5" rgba="0.184 0.063 0.322 0.8" contype="0" conaffinity="0"/>
+                <geom type="mesh" mesh="link5_col" rgba="0 0 0 0"/>
+                <body name="R345678_link6" pos="0 0.03 0.19">
+                  <inertial pos="0.02 0.06 0.07" mass="2.2" fullinertia="0.01 0.01 0.004 0.0 -0.001 0.002"/>
+                  <joint name="R345678_j6" type="hinge" axis="0 1 0" range="-1.4835 4.6251"/>
+                  <geom type="mesh" mesh="link6" rgba="0.184 0.063 0.322 0.8" contype="0" conaffinity="0"/>
+                  <geom type="mesh" mesh="link6_col" rgba="0 0 0 0"/>
+                  <body name="R345678_link7" pos="-0.015 0.073 0.11" euler="0 -1.570796327 0">
+                    <inertial pos="0 0 0.05" mass="1.4" diaginertia="0.001 0.001 0.001"/>
+                    <joint name="R345678_j7" type="hinge" axis="0 0 1" range="-3.0543 3.0543"/>
+                    <geom type="mesh" mesh="link7" rgba="0.184 0.063 0.322 0.8" contype="0" conaffinity="0"/>
+                    <geom type="mesh" mesh="link7_col" rgba="0 0 0 0"/>
+                    <body name="R345678_flange" pos="0 0 0.124" euler="0 0 -3.141592654">
+                      <body name="R345678_grav_base" pos="0 0 0">
+                        <inertial pos="0 0 0.057" mass="1.186" diaginertia="3E-3 3E-3 1E-3"/>
+                        <geom type="mesh" mesh="grav_base" euler="0 0 1.5707963"
+                              material="flexiv_black" contype="0" conaffinity="0"/>
+                        <geom type="mesh" mesh="grav_base_col" euler="0 0 1.5707963" rgba="0 0 0 0"/>
+                        <site name="R345678_tcp" pos="0 0 0.15" size="0.005"/>
+                        <body name="R345678_fw_link" pos="0 0 0">
+                          <inertial pos="0 0 0" mass="1E-4" diaginertia="1E-7 1E-7 1E-7"/>
+                          <joint name="R345678_fw" type="hinge" axis="1 0 0" range="0 0.1"/>
+                        </body>
+                        <body name="R345678_l_outer_bar" pos="0 -0.0325 0.0825">
+                          <inertial pos="0 0 0.029" mass="1E-4" diaginertia="1E-7 1E-7 1E-7"/>
+                          <joint name="R345678_l_ok" type="hinge" axis="1 0 0" range="-0.155 0.7854"/>
+                          <geom type="mesh" mesh="outer_bar" euler="0 0 1.5707963"
+                                material="flexiv_black" contype="0" conaffinity="0"/>
+                          <geom type="mesh" mesh="outer_bar_col" euler="0 0 1.5707963" rgba="0 0 0 0"/>
+                          <body name="R345678_l_fmount" pos="0 0 0.058">
+                            <inertial pos="0 0 0" mass="1E-4" diaginertia="1E-7 1E-7 1E-7"/>
+                            <joint name="R345678_l_if" type="hinge" axis="1 0 0" range="-0.7854 0.155"/>
+                            <geom type="mesh" mesh="finger_mount" euler="0 0 1.5707963"
+                                  material="flexiv_black" contype="0" conaffinity="0"/>
+                            <body name="R345678_l_ftip" pos="0 0.010 0.0235">
+                              <inertial pos="0 0 0" mass="1E-5" diaginertia="1E-10 1E-10 1E-10"/>
+                              <geom type="mesh" mesh="finger_tip_v" euler="0 0 1.5707963" contype="0" conaffinity="0"/>
+                              <geom type="mesh" mesh="finger_tip_col" euler="0 0 1.5707963" rgba="0 0 0 0"/>
+                            </body>
+                          </body>
+                        </body>
+                        <body name="R345678_l_inner_bar" pos="0 -0.0165 0.0995">
+                          <inertial pos="0 0 0.029" mass="1E-4" diaginertia="1E-7 1E-7 1E-7"/>
+                          <joint name="R345678_l_ik" type="hinge" axis="1 0 0" range="-0.155 0.7854"/>
+                          <geom type="mesh" mesh="inner_bar" euler="0 0 1.5707963"
+                                material="flexiv_black" contype="0" conaffinity="0"/>
+                          <geom type="mesh" mesh="inner_bar_col" euler="0 0 1.5707963" rgba="0 0 0 0"/>
+                        </body>
+                        <body name="R345678_r_outer_bar" pos="0 0.0325 0.0825" euler="0 0 3.141592654">
+                          <inertial pos="0 0 0.029" mass="1E-4" diaginertia="1E-7 1E-7 1E-7"/>
+                          <joint name="R345678_r_ok" type="hinge" axis="1 0 0" range="-0.155 0.7854"/>
+                          <geom type="mesh" mesh="outer_bar" euler="0 0 1.5707963"
+                                material="flexiv_black" contype="0" conaffinity="0"/>
+                          <geom type="mesh" mesh="outer_bar_col" euler="0 0 1.5707963" rgba="0 0 0 0"/>
+                          <body name="R345678_r_fmount" pos="0 0 0.058">
+                            <inertial pos="0 0 0" mass="1E-4" diaginertia="1E-7 1E-7 1E-7"/>
+                            <joint name="R345678_r_if" type="hinge" axis="1 0 0" range="-0.7854 0.155"/>
+                            <geom type="mesh" mesh="finger_mount" euler="0 0 1.5707963"
+                                  material="flexiv_black" contype="0" conaffinity="0"/>
+                            <body name="R345678_r_ftip" pos="0 0.010 0.0235">
+                              <inertial pos="0 0 0" mass="1E-5" diaginertia="1E-10 1E-10 1E-10"/>
+                              <geom type="mesh" mesh="finger_tip_v" euler="0 0 1.5707963" contype="0" conaffinity="0"/>
+                              <geom type="mesh" mesh="finger_tip_col" euler="0 0 1.5707963" rgba="0 0 0 0"/>
+                            </body>
+                          </body>
+                        </body>
+                        <body name="R345678_r_inner_bar" pos="0 0.0165 0.0995" euler="0 0 3.141592654">
+                          <inertial pos="0 0 0.029" mass="1E-4" diaginertia="1E-7 1E-7 1E-7"/>
+                          <joint name="R345678_r_ik" type="hinge" axis="1 0 0" range="-0.155 0.7854"/>
+                          <geom type="mesh" mesh="inner_bar" euler="0 0 1.5707963"
+                                material="flexiv_black" contype="0" conaffinity="0"/>
+                          <geom type="mesh" mesh="inner_bar_col" euler="0 0 1.5707963" rgba="0 0 0 0"/>
+                        </body>
+                      </body>
+                    </body>
+                  </body>
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+
+    </body> <!-- 3_robot_mount -->
+      </body> <!-- mobile_base -->
   </worldbody>
 
-  <!-- ============================================================ -->
-  <!-- EQUALITY CONSTRAINTS  (mimic joints)                        -->
-  <!-- ============================================================ -->
   <equality>
-    <joint name="eq_left_outer_knuckle"
-           joint1="Rizon4s-123456_left_outer_knuckle_joint"
-           joint2="Rizon4s-123456_finger_width_joint"
-           polycoef="-0.155 9.404 0 0 0"/>
-    <joint name="eq_left_inner_knuckle"
-           joint1="Rizon4s-123456_left_inner_knuckle_joint"
-           joint2="Rizon4s-123456_left_outer_knuckle_joint"
-           polycoef="0 1 0 0 0"/>
-    <joint name="eq_left_inner_finger"
-           joint1="Rizon4s-123456_left_inner_finger_joint"
-           joint2="Rizon4s-123456_left_outer_knuckle_joint"
-           polycoef="0 -1 0 0 0"/>
-    <joint name="eq_right_outer_knuckle"
-           joint1="Rizon4s-123456_right_outer_knuckle_joint"
-           joint2="Rizon4s-123456_left_outer_knuckle_joint"
-           polycoef="0 1 0 0 0"/>
-    <joint name="eq_right_inner_knuckle"
-           joint1="Rizon4s-123456_right_inner_knuckle_joint"
-           joint2="Rizon4s-123456_left_outer_knuckle_joint"
-           polycoef="0 1 0 0 0"/>
-    <joint name="eq_right_inner_finger"
-           joint1="Rizon4s-123456_right_inner_finger_joint"
-           joint2="Rizon4s-123456_left_outer_knuckle_joint"
-           polycoef="0 -1 0 0 0"/>
+    <joint name="A_l_ok_eq" joint1="R123456_l_ok" joint2="R123456_fw" polycoef="-0.155 9.404 0 0 0"/>
+    <joint name="A_l_ik_eq" joint1="R123456_l_ik" joint2="R123456_l_ok" polycoef="0 1 0 0 0"/>
+    <joint name="A_l_if_eq" joint1="R123456_l_if" joint2="R123456_l_ok" polycoef="0 -1 0 0 0"/>
+    <joint name="A_r_ok_eq" joint1="R123456_r_ok" joint2="R123456_l_ok" polycoef="0 1 0 0 0"/>
+    <joint name="A_r_ik_eq" joint1="R123456_r_ik" joint2="R123456_l_ok" polycoef="0 1 0 0 0"/>
+    <joint name="A_r_if_eq" joint1="R123456_r_if" joint2="R123456_l_ok" polycoef="0 -1 0 0 0"/>
+
+    <joint name="C_l_ok_eq" joint1="R345678_l_ok" joint2="R345678_fw" polycoef="-0.155 9.404 0 0 0"/>
+    <joint name="C_l_ik_eq" joint1="R345678_l_ik" joint2="R345678_l_ok" polycoef="0 1 0 0 0"/>
+    <joint name="C_l_if_eq" joint1="R345678_l_if" joint2="R345678_l_ok" polycoef="0 -1 0 0 0"/>
+    <joint name="C_r_ok_eq" joint1="R345678_r_ok" joint2="R345678_l_ok" polycoef="0 1 0 0 0"/>
+    <joint name="C_r_ik_eq" joint1="R345678_r_ik" joint2="R345678_l_ok" polycoef="0 1 0 0 0"/>
+    <joint name="C_r_if_eq" joint1="R345678_r_if" joint2="R345678_l_ok" polycoef="0 -1 0 0 0"/>
   </equality>
 
-  <!-- ============================================================ -->
-  <!-- ACTUATORS  — position controllers with gravity compensation  -->
-  <!--                                                              -->
-  <!--  kp  = proportional gain (stiffness)                        -->
-  <!--  kv  = derivative gain   (damping)   [MuJoCo >= 3.x]       -->
-  <!--  forcerange = peak torque (matches URDF effort limits)      -->
-  <!-- ============================================================ -->
+  <!--
+  ================================================================
+  ACTUATORS
+  Robot A: ctrl[0..7]   (joints 1-7 + gripper)
+  Robot B: ctrl[8..14]  (joints 1-7, no gripper)
+  Robot C: ctrl[15..22] (joints 1-7 + gripper)
+  Wheels:  ctrl[23..24] (left, right)
+  Total: 25 actuators
+  ================================================================
+  -->
   <actuator>
-    <position name="ctrl_joint1" joint="Rizon4s-123456_joint1"
-              kp="500" forcerange="-123 123" ctrlrange="-2.8798 2.8798"/>
-    <position name="ctrl_joint2" joint="Rizon4s-123456_joint2"
-              kp="500" forcerange="-123 123" ctrlrange="-2.3562 2.3562"/>
-    <position name="ctrl_joint3" joint="Rizon4s-123456_joint3"
-              kp="300" forcerange="-64  64"  ctrlrange="-3.0543 3.0543"/>
-    <position name="ctrl_joint4" joint="Rizon4s-123456_joint4"
-              kp="300" forcerange="-64  64"  ctrlrange="-1.9548 2.7751"/>
-    <position name="ctrl_joint5" joint="Rizon4s-123456_joint5"
-              kp="150" forcerange="-39  39"  ctrlrange="-3.0543 3.0543"/>
-    <position name="ctrl_joint6" joint="Rizon4s-123456_joint6"
-              kp="150" forcerange="-39  39"  ctrlrange="-1.4835 4.6251"/>
-    <position name="ctrl_joint7" joint="Rizon4s-123456_joint7"
-              kp="150" forcerange="-39  39"  ctrlrange="-3.0543 3.0543"/>
+    <position name="A_j1"   joint="R123456_j1" kp="4500" forcerange="-123 123" ctrlrange="-2.8798 2.8798"/>
+    <position name="A_j2"   joint="R123456_j2" kp="4500" forcerange="-123 123" ctrlrange="-2.3562 2.3562"/>
+    <position name="A_j3"   joint="R123456_j3" kp="4300" forcerange="-64  64"  ctrlrange="-3.0543 3.0543"/>
+    <position name="A_j4"   joint="R123456_j4" kp="4300" forcerange="-64  64"  ctrlrange="-1.9548 2.7751"/>
+    <position name="A_j5"   joint="R123456_j5" kp="4100" forcerange="-39  39"  ctrlrange="-3.0543 3.0543"/>
+    <position name="A_j6"   joint="R123456_j6" kp="4100" forcerange="-39  39"  ctrlrange="-1.4835 4.6251"/>
+    <position name="A_j7"   joint="R123456_j7" kp="4100" forcerange="-39  39"  ctrlrange="-3.0543 3.0543"/>
+    <position name="A_grip" joint="R123456_fw"  kp="480"  forcerange="-80  80"  ctrlrange="0 0.5"/>
 
-    <!-- Gripper: position controller on the virtual width joint -->
-    <position name="ctrl_gripper" joint="Rizon4s-123456_finger_width_joint"
-              kp="100" forcerange="-80 80" ctrlrange="0 0.1"/>
+    <position name="B_j1"   joint="R234567_j1" kp="500" forcerange="-123 123" ctrlrange="-2.8798 2.8798"/>
+    <position name="B_j2"   joint="R234567_j2" kp="500" forcerange="-123 123" ctrlrange="-2.3562 2.3562"/>
+    <position name="B_j3"   joint="R234567_j3" kp="300" forcerange="-64  64"  ctrlrange="-3.0543 3.0543"/>
+    <position name="B_j4"   joint="R234567_j4" kp="300" forcerange="-64  64"  ctrlrange="-1.9548 2.7751"/>
+    <position name="B_j5"   joint="R234567_j5" kp="150" forcerange="-39  39"  ctrlrange="-3.0543 3.0543"/>
+    <position name="B_j6"   joint="R234567_j6" kp="150" forcerange="-39  39"  ctrlrange="-1.4835 4.6251"/>
+    <position name="B_j7"   joint="R234567_j7" kp="150" forcerange="-39  39"  ctrlrange="-3.0543 3.0543"/>
+
+    <position name="C_j1"   joint="R345678_j1" kp="500" forcerange="-123 123" ctrlrange="-2.8798 2.8798"/>
+    <position name="C_j2"   joint="R345678_j2" kp="500" forcerange="-123 123" ctrlrange="-2.3562 2.3562"/>
+    <position name="C_j3"   joint="R345678_j3" kp="300" forcerange="-64  64"  ctrlrange="-3.0543 3.0543"/>
+    <position name="C_j4"   joint="R345678_j4" kp="300" forcerange="-64  64"  ctrlrange="-1.9548 2.7751"/>
+    <position name="C_j5"   joint="R345678_j5" kp="150" forcerange="-39  39"  ctrlrange="-3.0543 3.0543"/>
+    <position name="C_j6"   joint="R345678_j6" kp="150" forcerange="-39  39"  ctrlrange="-1.4835 4.6251"/>
+    <position name="C_j7"   joint="R345678_j7" kp="150" forcerange="-39  39"  ctrlrange="-3.0543 3.0543"/>
+    <position name="C_grip" joint="R345678_fw"  kp="100" forcerange="-80  80"  ctrlrange="0 0.5"/>
+
+    <!-- Wheels: velocity actuators for differential drive -->
+    <velocity name="lw" joint="left_wheel_joint"  kv="10" forcerange="-50 50" ctrlrange="-10 10"/>
+    <velocity name="rw" joint="right_wheel_joint" kv="10" forcerange="-50 50" ctrlrange="-10 10"/>
   </actuator>
 
-  <!-- ============================================================ -->
-  <!-- KEY-FRAME  (home / zero pose for quick reset)               -->
-  <!-- ============================================================ -->
+  <!--
+  ================================================================
+  KEYFRAME
+  freejoint adds 7 qpos: [x, y, z, qw, qx, qy, qz]
+  left_wheel: 1 qpos
+  right_wheel: 1 qpos
+  Robot A: 14 qpos
+  Robot B: 7 qpos (no gripper)
+  Robot C: 14 qpos
+  Total qpos = 7 + 1 + 1 + 14 + 7 + 14 = 44
+
+  ctrl = 8 (A) + 7 (B) + 8 (C) + 2 (wheels) = 25
+  ================================================================
+  -->
   <keyframe>
-    <!-- qpos: joint1-7, finger_width,
-               left_outer_knuckle, left_inner_finger, left_inner_knuckle,
-               right_outer_knuckle, right_inner_finger, right_inner_knuckle  (14 total)
-         ctrl: ctrl_joint1-7, ctrl_gripper  (8 total) -->
     <key name="home"
-         qpos="0 0 0 0 0 0 0  0  0 0 0 0 0 0"
-         ctrl="0 0 0 0 0 0 0  0"/>
+         qpos="0 0 0.25  1 0 0 0  0 0
+               0 0 0 0 0 0 0  0  0 0 0  0 0 0
+               0 0 0 0 0 0 0
+               0 0 0 0 0 0 0  0  0 0 0  0 0 0 0 0 0 0 0 0 0 0"
+         ctrl="0 0 0 0 0 0 0  0
+               0 0 0 0 0 0 0
+               0 0 0 0 0 0 0  0
+               0 0"/>
   </keyframe>
 
 </mujoco>
