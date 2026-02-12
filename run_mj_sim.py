@@ -3,7 +3,7 @@ import mujoco.viewer
 import numpy as np
 
 # Load your XML file
-model = mujoco.MjModel.from_xml_path("4s.mujoco.xml")
+model = mujoco.MjModel.from_xml_path("4s_v1.mujoco.xml")
 data = mujoco.MjData(model)
 
 # Launch interactive viewer
